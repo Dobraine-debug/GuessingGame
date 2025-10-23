@@ -1,0 +1,371 @@
+Vad är pull respektive push?
+Upp- och nedladdning, egentligen. Pull uppdaterar innehållet i min repository mot repon på Github och laddar ner
+eventuella nya filer och ändringar lokalt. Push uppdaterar istället repon på Github med de ändringar och filer
+jag har i den lokala repon.
+
+När använder man log respektive status?
+Log visar de commits med sina respektive meddelanden, datumen de utfördes och av vem i repositoryn. Status visar
+om det finns filer som blivit ändrade, men inte blivit tillagda till staging area och filer som finns i staging area
+som inte blivit bekräftade.
+
+Vad är en Git branch och varför är de viktiga?
+En repository har alltid en branch som heter main. En branch är en kopia av huvudbranchen så som den såg ut när den
+nya branchen skapades. Ändringar som görs i en sidobranch påverkar inte huvudbranchen förrän man mergar dem.
+Sidobrancher är väldigt användbara om man exempelvis jobbar på flera parallella features, metoder, skript eller
+liknande i ett projekt och vill kunna testa ut dem utan att påverka huvudbranchen, eller om man bara vill prova
+ändringar av ett program och behålla de ursprungliga filerna intakta. Väldigt användbart om man jobbar flera personer
+på samma repository.
+
+Det finns flera sätt att rulla tillbaka koden till ett tidigare tillstånd. Förklara skillnaden.
+Generellt finns det tre varianter. Git revert skapar en ny commit som helt enkelt ångrar en gammal. Det har ingen effekt på historiken, utan både den gammla ändringen och återställningen syns i loggen. Man riktar här in sig på en specifik tidigare commit med lognummret
+som "ångras" Det är användbart om man bara behöver rulla tillbaka en specifik ändring som man vet var felaktig.
+Git restore kan å sin tur användas för att ångra ändringar man gjort i arbetsytan på en specifik fil. Lägger man till "--staging" så kan man istället ta bort den från staging area. Det är användbart om man behöver vara
+mer specifik och vet exakt vilken fil som ska återställas, eller om man bara vill få bort en fil från staging area som lades till där av misstag.
+Den sista typen av ändring, git reset, kommer i tre varianter. Soft rullar bara tillbaka själva commiten. Filerna finns kvar både i staging area och i arbetsutrymmet. Det här är användbart om man exempelvis skrev ett dåligt meddelande under commit eller behöver göra någon
+mindre ändring utan att behöva skriva om för mycket. Mixed rullar både tillbaka ändringarna från commit och staging area. Filernas ändringar finns fortfarande kvar i arbetsutrymmet och behöver läggas upp i staging area igen med add, men alla ändringar är för övrigt kvar.
+Det är användbart om någon fil blivit tillagd som inte skulle vara med. Hard är den mest drastiska varianten. Den tar bort de senaste ändringarna i historiken, staging area och arbetskatalogen permanent. Eftersom den förra ändringen försvinner helt från historiken så är
+ändringarna helt borta om man inte har en separat backup. Eftersom man riskerar att förlora viktig data ska den egentligen bara användas om man är fullständigt säker på att en tidigare ändring helt ska slängas och aldrig kommer att användas igen.
+
+Exempel på de olika metoderna:
+Här har jag skapat en branch till guessing game enbart för att testa. Vi gör en revert för att ta bort ignore-listan jag lade in i början och skriver in de sju första siffrorna i lognummret:
+
+david@Pentex:~/git-projects/guessingGame$ git revert 5ac5d51
+
+[reset-test 28642d6] Revert "Adds ignore list"
+ 1 file changed, 12 deletions(-)
+ delete mode 100644 .gitignore.txt
+
+Och lägger till loggen för att visa att ändringarna finns med:
+
+david@Pentex:~/git-projects/guessingGame$ git log
+commit 28642d6055f6fe45c0769959ada04e1ab18029ff (HEAD -> reset-test)
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 16:21:57 2025 +0200
+
+    Revert "Adds ignore list"
+
+    This reverts commit 5ac5d5199a766c272b73472236f4a68756d4d48a.
+commit dc00eaf02ad899a3f487dc7aa553bdba6e7ea7db (origin/main, main)
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 15:12:29 2025 +0200
+
+    Added small fixes to the text in the script
+
+commit 719e591b978245ffd7a02e13e1fec4189d98eb9b
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 14:47:29 2025 +0200
+
+    Fixed spelling mistake in script
+
+commit af2b32175c9f1415cb718ac5fbee6af7ca00fc3b
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 14:42:36 2025 +0200
+
+    Adding script to run the game
+
+commit 480c84a30331baae3101bdd25a093cf84d0cc3b1
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 14:24:26 2025 +0200
+
+    Added getReply method
+
+commit affeca9024242bf607baba19df2a49ad176b66c5
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 13:55:57 2025 +0200
+
+    Added start method
+
+commit 21fc5c8956ca9ab169a5530584f2a071e205cf5e
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 13:51:15 2025 +0200
+
+    Adding main class
+
+commit 502ecd7450c4e4e2f2d3a4fd2589fabf331b0029
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 13:37:57 2025 +0200
+
+    Adds constructor for Guesser.java
+
+commit 3a967dd7e537a0da628c18ecf253f4098d477aff
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 13:28:42 2025 +0200
+
+    Adds Guesser.java
+
+commit 5ac5d5199a766c272b73472236f4a68756d4d48a
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 13:27:16 2025 +0200
+
+    Adds ignore list 
+
+I ett annat exempel har jag gjort en ändring i Guesser.java som jag inte är nöjd med och vill ta bort:
+
+david@Pentex:~/git-projects/guessingGame$ git status
+On branch reset-test
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   Guesser.java
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        Guesser.class
+        GuessingGame.class
+        "fr\303\245gor.txt"
+
+no changes added to commit (use "git add" and/or "git commit -a")
+
+Som status visar så finns det ändringar i Guesser.java. Jag använder restore för att ta bort dem.
+
+david@Pentex:~/git-projects/guessingGame$ git restore Guesser.java
+david@Pentex:~/git-projects/guessingGame$ git status
+On branch reset-test
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        Guesser.class
+        GuessingGame.class
+        "fr\303\245gor.txt"
+
+nothing added to commit but untracked files present (use "git add" to track)
+
+Och nu finns det inga ändringar kvar längre.
+
+Här har jag istället råkat committa felet. Hoppsan. Jag använder soft reset för att rulla tillbaka det.
+
+david@Pentex:~/git-projects/guessingGame$ git log
+commit 6460901537449cfc66c5be44d3978052743e3f2d (HEAD -> reset-test)
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 16:45:13 2025 +0200
+
+    Adding mistake
+
+commit 28642d6055f6fe45c0769959ada04e1ab18029ff
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 16:21:57 2025 +0200
+
+    Revert "Adds ignore list"
+
+    This reverts commit 5ac5d5199a766c272b73472236f4a68756d4d48a.
+
+commit dc00eaf02ad899a3f487dc7aa553bdba6e7ea7db (origin/main, main)
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 15:12:29 2025 +0200
+
+    Added small fixes to the text in the script
+
+commit 719e591b978245ffd7a02e13e1fec4189d98eb9b
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 14:47:29 2025 +0200
+
+    Fixed spelling mistake in script
+
+commit af2b32175c9f1415cb718ac5fbee6af7ca00fc3b
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 14:42:36 2025 +0200
+
+    Adding script to run the game
+
+commit 480c84a30331baae3101bdd25a093cf84d0cc3b1
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 14:24:26 2025 +0200
+
+    Added getReply method
+
+commit affeca9024242bf607baba19df2a49ad176b66c5
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 13:55:57 2025 +0200
+
+    Added start method
+
+commit 21fc5c8956ca9ab169a5530584f2a071e205cf5e
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 13:51:15 2025 +0200
+
+    Adding main class
+
+commit 502ecd7450c4e4e2f2d3a4fd2589fabf331b0029
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 13:37:57 2025 +0200
+
+    Adds constructor for Guesser.java
+
+commit 3a967dd7e537a0da628c18ecf253f4098d477aff
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 13:28:42 2025 +0200
+
+    Adds Guesser.java
+
+commit 5ac5d5199a766c272b73472236f4a68756d4d48a
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 13:27:16 2025 +0200
+
+    Adds ignore list
+david@Pentex:~/git-projects/guessingGame$ git reset --soft HEAD~1
+
+Och tittar man på status så är filen tillbaka i staging area. Felet är kvar, men den är borta från HEAD.
+
+david@Pentex:~/git-projects/guessingGame$ git status
+On branch reset-test
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        modified:   Guesser.java
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        Guesser.class
+        GuessingGame.class
+        "fr\303\245gor.txt"
+
+Men jag känner att jag vill ha bort felet därifrån också, så jag använder mixed reset.
+
+david@Pentex:~/git-projects/guessingGame$ git reset --mixed HEAD~1
+Unstaged changes after reset:
+M       Guesser.java
+david@Pentex:~/git-projects/guessingGame$ git status
+On branch reset-test
+Changes not staged for commit:
+  (use "git add/rm <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+        modified:   Guesser.java
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        Guesser.class
+        GuessingGame.class
+        "fr\303\245gor.txt"
+
+no changes added to commit (use "git add" and/or "git commit -a")
+david@Pentex:~/git-projects/guessingGame$
+
+Nu åkte de senaste förändringarna bort från staging area. Guesser.java är tillbaka i arbetsytan. Misstagen i filen är förstås kvar fortfarande, men jag kan ändra dem och lägga upp filen på nytt.
+Efter att åter igen av misstag lagt till och committat felet så bestämmer jag mig istället för att helt ta bort den senaste ändringen med reset hard:
+
+david@Pentex:~/git-projects/guessingGame$ git log
+commit 9b084ad4a87e0ab40426b56a727c199fa41e1db5 (HEAD -> reset-test)
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 16:57:21 2025 +0200
+
+    Adding mistake again
+
+commit dc00eaf02ad899a3f487dc7aa553bdba6e7ea7db (origin/main, main)
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 15:12:29 2025 +0200
+
+    Added small fixes to the text in the script
+
+commit 719e591b978245ffd7a02e13e1fec4189d98eb9b
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 14:47:29 2025 +0200
+
+    Fixed spelling mistake in script
+
+commit af2b32175c9f1415cb718ac5fbee6af7ca00fc3b
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 14:42:36 2025 +0200
+
+    Adding script to run the game
+
+commit 480c84a30331baae3101bdd25a093cf84d0cc3b1
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 14:24:26 2025 +0200
+
+    Added getReply method
+
+commit affeca9024242bf607baba19df2a49ad176b66c5
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 13:55:57 2025 +0200
+
+    Added start method
+
+commit 21fc5c8956ca9ab169a5530584f2a071e205cf5e
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 13:51:15 2025 +0200
+
+    Adding main class
+
+commit 502ecd7450c4e4e2f2d3a4fd2589fabf331b0029
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 13:37:57 2025 +0200
+
+    Adds constructor for Guesser.java
+
+commit 3a967dd7e537a0da628c18ecf253f4098d477aff
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 13:28:42 2025 +0200
+
+    Adds Guesser.java
+
+commit 5ac5d5199a766c272b73472236f4a68756d4d48a
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 13:27:16 2025 +0200
+
+    Adds ignore list
+david@Pentex:~/git-projects/guessingGame$ git reset --hard HEAD~1
+HEAD is now at dc00eaf Added small fixes to the text in the script
+david@Pentex:~/git-projects/guessingGame$ git status
+On branch reset-test
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        Guesser.class
+        GuessingGame.class
+        "fr\303\245gor.txt"
+
+nothing added to commit but untracked files present (use "git add" to track)
+david@Pentex:~/git-projects/guessingGame$ git log
+commit dc00eaf02ad899a3f487dc7aa553bdba6e7ea7db (HEAD -> reset-test, origin/main, main)
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 15:12:29 2025 +0200
+
+    Added small fixes to the text in the script
+
+commit 719e591b978245ffd7a02e13e1fec4189d98eb9b
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 14:47:29 2025 +0200
+
+    Fixed spelling mistake in script
+
+commit af2b32175c9f1415cb718ac5fbee6af7ca00fc3b
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 14:42:36 2025 +0200
+
+    Adding script to run the game
+
+commit 480c84a30331baae3101bdd25a093cf84d0cc3b1
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 14:24:26 2025 +0200
+
+    Added getReply method
+
+commit affeca9024242bf607baba19df2a49ad176b66c5
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 13:55:57 2025 +0200
+
+    Added start method
+
+commit 21fc5c8956ca9ab169a5530584f2a071e205cf5e
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 13:51:15 2025 +0200
+
+    Adding main class
+
+commit 502ecd7450c4e4e2f2d3a4fd2589fabf331b0029
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 13:37:57 2025 +0200
+
+    Adds constructor for Guesser.java
+
+commit 3a967dd7e537a0da628c18ecf253f4098d477aff
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 13:28:42 2025 +0200
+
+    Adds Guesser.java
+
+commit 5ac5d5199a766c272b73472236f4a68756d4d48a
+Author: David <valkeshar@gmail.com>
+Date:   Thu Oct 23 13:27:16 2025 +0200
+
+    Adds ignore list
+david@Pentex:~/git-projects/guessingGame$
+
+Som man kan se försvinner den tidigare förändringen helt från loggen, staging area och arbetsytan och är fullständigt borta.
