@@ -8,8 +8,8 @@ import java.io.Console;
  * task to complete the missing parts.
  */
 public class Guesser{
-  private int low;
-  private int high;
+  	private int low;
+  	private int high;
 
   /*
    * Task 1. Write code here for a constructor
@@ -23,7 +23,10 @@ public class Guesser{
    */
   
   // Write the constructor below this line.
-
+	public void SetValues(int low, int high){
+		low = this.low;
+		high = this.high;
+	}
 
   /*
    * Task 2. Complete the start() method, so that
